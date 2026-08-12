@@ -47,8 +47,9 @@ Future<void> main(List<String> arguments) async {
     if (selected.length >= limit) break;
     final line = rawLine.trim();
     if (line.isEmpty) continue;
-    if (line.length < 8 || line.length > 300) continue; // skip fragments/outliers
+    if (line.length < 12 || line.length > 300) continue; // skip fragments/outliers
     if (!_containsDevanagari(line)) continue;
+    if (!_looksLikeRealSentence(line)) continue;
     if (!seen.add(line)) continue; // dedupe
     selected.add(line);
   }
@@ -83,6 +84,20 @@ Future<void> main(List<String> arguments) async {
 }
 
 bool _containsDevanagari(String text) => text.runes.any((cp) => cp >= 0x0900 && cp <= 0x097F);
+
+/// The raw file is a mix of real prose/verse and a lot of Sanskrit
+/// Wikipedia scrape noise (section headers, TOC fragments, "retrieved
+/// from" footers, bare proper-noun snippets). Translating those as if they
+/// were meaningful sentences would be dishonest, so this rejects them
+/// before a line ever reaches the "selected" pool.
+bool _looksLikeRealSentence(String line) {
+  if (line.contains('सम्पादयतु')) return false; // "[edit]" wiki marker
+  if (line.contains('पुनः प्राप्तिः')) return false; // "retrieved from" wiki footer
+  if (line.startsWith(']') || line.startsWith('?') || line.startsWith('"?')) return false;
+  final wordCount = line.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+  if (wordCount < 4) return false; // headings/labels are almost always 1-3 tokens
+  return true;
+}
 
 String? _argValue(List<String> args, String flag) {
   final index = args.indexOf(flag);

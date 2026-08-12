@@ -76,6 +76,7 @@ String? _clean(String rawLine) {
   if (line.isEmpty) return null;
   if (line.startsWith('<doc') || line.startsWith('</doc>')) return null;
   if (line.startsWith('{{') || line.startsWith(';')) return null;
+  if (RegExp(r'^=+.*=+$').hasMatch(line)) return null; // wiki section header, e.g. "== History =="
 
   line = line.replaceAll(RegExp(r'\{\{[^}]*\}\}'), '');
   line = line.replaceAll(RegExp(r'\[\[([^|\]]*\|)?([^\]]*)\]\]'), r'$2');
