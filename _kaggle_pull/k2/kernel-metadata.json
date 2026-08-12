@@ -1,0 +1,25 @@
+{
+  "id": "bwandowando/members-with-broadest-english-vocabulary",
+  "id_no": 47068187,
+  "title": "\ud83e\udde0 Members With Broadest English Vocabulary",
+  "code_file": "members-with-broadest-english-vocabulary.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "keywords": [
+    "social networks",
+    "research"
+  ],
+  "dataset_sources": [
+    "",
+    "bwandowando/479k-english-words"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [],
+  "model_sources": [],
+  "docker_image": "gcr.io/kaggle-images/python@sha256:9ec82287ef36acb3450b497fe41880766d3ad0d8459f2b887709cb4f10367a2c",
+  "machine_shape": "None"
+}

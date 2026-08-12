@@ -9,10 +9,17 @@ class LlmTranslationContext {
     this.retrievedSentences = const [],
     this.tokenizedWords = const [],
     this.sandhiCandidates = const [],
+    this.generationBrief,
   });
 
   final String sanskritText;
   final List<String> targetLanguageCodes;
+
+  /// When set, `generateTrainingExample` invents a brand-new sentence from
+  /// this brief instead of reformatting `sanskritText` (which is unused —
+  /// pass '' — in that mode). Used by scripts/generate_dataset.dart; the
+  /// live API never sets this.
+  final DatasetGenerationBrief? generationBrief;
 
   /// Dictionary entries found for words/lemmas in the sentence, serialized
   /// as plain maps so this stays independent of the repository layer.
@@ -24,6 +31,16 @@ class LlmTranslationContext {
   final List<String> tokenizedWords;
 
   final List<Map<String, dynamic>> sandhiCandidates;
+}
+
+/// A brief for inventing a new example sentence, rather than analyzing an
+/// existing one — see `LlmTranslationContext.generationBrief`.
+class DatasetGenerationBrief {
+  const DatasetGenerationBrief({required this.category, required this.domain, required this.guidance});
+
+  final String category;
+  final String domain;
+  final String guidance;
 }
 
 class LlmResult {

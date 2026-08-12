@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../config/env_config.dart';
 import '../core/errors/app_exception.dart';
+import 'llm_exceptions.dart';
 import 'llm_provider.dart';
 import 'prompts.dart';
 
@@ -13,13 +14,41 @@ import 'prompts.dart';
 /// (see lib/src/translation/translation_validator.dart) still checks the
 /// JSON matches the expected shape — `json_object` mode guarantees valid
 /// JSON, not our schema.
+///
+/// Also the provider used against OpenRouter (any OpenAI-compatible
+/// endpoint works — see OPENAI_BASE_URL in .env.example) — this class has
+/// no OpenAI-specific behavior beyond the request/response shape, which
+/// OpenRouter mirrors.
 class OpenAIProvider implements LLMProvider {
-  OpenAIProvider({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
+  OpenAIProvider({
+    http.Client? httpClient,
+    String? apiKey,
+    String? baseUrl,
+    String? model,
+    Duration? timeout,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _apiKeyOverride = apiKey,
+        _baseUrlOverride = baseUrl,
+        _modelOverride = model,
+        _timeoutOverride = timeout;
 
   final http.Client _httpClient;
   final EnvConfig _env = EnvConfig.instance;
 
-  Uri get _endpoint => Uri.parse('${_env.openAiBaseUrl}/chat/completions');
+  /// Overrides `EnvConfig.openAiApiKey` when set — used by
+  /// `RotatingLlmProvider` (scripts/) to run one `OpenAIProvider` per key
+  /// in a fallback pool without touching global env state.
+  final String? _apiKeyOverride;
+
+  /// Overrides `EnvConfig.openAiBaseUrl`/model — used by
+  /// scripts/generate_dataset.dart to point at a local Ollama instance for
+  /// bulk generation without touching the live API server's OpenRouter
+  /// configuration (they're independent by design).
+  final String? _baseUrlOverride;
+  final String? _modelOverride;
+  final Duration? _timeoutOverride;
+
+  Uri get _endpoint => Uri.parse('${_baseUrlOverride ?? _env.openAiBaseUrl}/chat/completions');
 
   @override
   Future<LlmResult> translate(LlmTranslationContext context) => _completeJson(
@@ -72,18 +101,32 @@ class OpenAIProvider implements LLMProvider {
   }
 
   @override
-  Future<LlmResult> generateTrainingExample(LlmTranslationContext context) => _completeJson(
-        model: _env.openAiEconomyModel,
-        systemPrompt: kTranslationSystemPrompt,
-        userPrompt: buildTranslationUserPrompt(
-          sanskritText: context.sanskritText,
-          targetLanguageCodes: context.targetLanguageCodes,
-          dictionaryHits: context.dictionaryHits,
-          retrievedSentences: context.retrievedSentences,
-          tokenizedWords: context.tokenizedWords,
-          sandhiCandidates: context.sandhiCandidates,
+  Future<LlmResult> generateTrainingExample(LlmTranslationContext context) {
+    final brief = context.generationBrief;
+    if (brief != null) {
+      return _completeJson(
+        model: _modelOverride ?? _env.openAiEconomyModel,
+        systemPrompt: kDatasetGenerationSystemPrompt,
+        userPrompt: buildDatasetGenerationUserPrompt(
+          category: brief.category,
+          domain: brief.domain,
+          guidance: brief.guidance,
         ),
       );
+    }
+    return _completeJson(
+      model: _env.openAiEconomyModel,
+      systemPrompt: kTranslationSystemPrompt,
+      userPrompt: buildTranslationUserPrompt(
+        sanskritText: context.sanskritText,
+        targetLanguageCodes: context.targetLanguageCodes,
+        dictionaryHits: context.dictionaryHits,
+        retrievedSentences: context.retrievedSentences,
+        tokenizedWords: context.tokenizedWords,
+        sandhiCandidates: context.sandhiCandidates,
+      ),
+    );
+  }
 
   Future<LlmResult> _completeJson({
     required String model,
@@ -144,7 +187,7 @@ class OpenAIProvider implements LLMProvider {
     required String userPrompt,
     required bool jsonMode,
   }) async {
-    final apiKey = _env.openAiApiKey;
+    final apiKey = _apiKeyOverride ?? _env.openAiApiKey;
     if (apiKey == null) {
       throw AppException.upstreamUnavailable(
         'The translation engine is not configured (missing OPENAI_API_KEY).',
@@ -171,9 +214,18 @@ class OpenAIProvider implements LLMProvider {
               if (jsonMode) 'response_format': {'type': 'json_object'},
             }),
           )
-          .timeout(Duration(seconds: _env.llmRequestTimeoutSeconds));
+          .timeout(_timeoutOverride ?? Duration(seconds: _env.llmRequestTimeoutSeconds));
     } catch (_) {
       throw AppException.upstreamUnavailable('The translation engine did not respond in time.');
+    }
+
+    if (httpResponse.statusCode == 429 ||
+        httpResponse.statusCode == 401 ||
+        httpResponse.statusCode == 403) {
+      // 429 = rate limited; OpenRouter also returns 401/403 for a key whose
+      // free-tier daily quota is exhausted. Either way, this specific key
+      // is temporarily spent, not that the request itself is invalid.
+      throw LlmRateLimitedException(httpResponse.statusCode, httpResponse.body);
     }
 
     if (httpResponse.statusCode >= 400) {

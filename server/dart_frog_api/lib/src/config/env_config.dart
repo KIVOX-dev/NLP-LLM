@@ -16,8 +16,8 @@ class EnvConfig {
   static Map<String, String> _load() {
     final values = <String, String>{};
 
-    final envFile = File('.env');
-    if (envFile.existsSync()) {
+    final envFile = _findEnvFile();
+    if (envFile != null) {
       for (final rawLine in envFile.readAsLinesSync()) {
         final line = rawLine.trim();
         if (line.isEmpty || line.startsWith('#')) continue;
@@ -37,6 +37,25 @@ class EnvConfig {
     // Real process env wins over .env file contents.
     values.addAll(Platform.environment);
     return values;
+  }
+
+  /// Resolves `.env` regardless of whether the current process was started
+  /// from `server/dart_frog_api/` (normal `dart_frog dev` usage) or from
+  /// `scripts/` or the repo root (the dataset generator scripts, which
+  /// import this same config rather than duplicating env-loading logic —
+  /// spec §26 requires those scripts to be independently runnable).
+  static File? _findEnvFile() {
+    final candidates = <String>[
+      '.env',
+      'server/dart_frog_api/.env',
+      '../server/dart_frog_api/.env',
+      '../../server/dart_frog_api/.env',
+    ];
+    for (final path in candidates) {
+      final file = File(path);
+      if (file.existsSync()) return file;
+    }
+    return null;
   }
 
   String? _get(String key) {
@@ -82,6 +101,22 @@ class EnvConfig {
 
   String get llmProvider => getOrDefault('LLM_PROVIDER', 'openai');
   String? get openAiApiKey => _get('OPENAI_API_KEY');
+
+  /// Pool of keys for bulk/batch jobs that want to rotate past a single
+  /// key's rate limit (see `KeyRotatingHttpClient` in scripts/). Falls back
+  /// to the single `OPENAI_API_KEY` when `OPENAI_API_KEYS` isn't set, so
+  /// the live API server (which only ever needs one key at a time) doesn't
+  /// need to change.
+  List<String> get openAiApiKeys {
+    final raw = _get('OPENAI_API_KEYS');
+    final keys = raw == null
+        ? <String>[]
+        : raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    if (keys.isNotEmpty) return keys;
+    final single = openAiApiKey;
+    return single == null ? const [] : [single];
+  }
+
   String get openAiModel => getOrDefault('OPENAI_MODEL', 'gpt-4o-mini');
   String get openAiEconomyModel => getOrDefault('OPENAI_ECONOMY_MODEL', openAiModel);
   String get openAiBaseUrl => getOrDefault('OPENAI_BASE_URL', 'https://api.openai.com/v1');

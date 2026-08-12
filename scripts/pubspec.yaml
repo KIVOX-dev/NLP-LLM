@@ -1,0 +1,27 @@
+name: sanskrit_dataset_scripts
+description: >
+  Standalone dataset tooling (spec §26): generate_dataset.dart,
+  validate_dataset.dart, import_mongodb.dart, create_embeddings.dart.
+  Depends on the Dart Frog backend package directly so the LLM
+  provider/config/Mongo-connection code isn't duplicated — see
+  lib/rotating_llm_provider.dart for the one thing that's specific to bulk
+  generation (multi-key fallback).
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  dart_frog_api:
+    path: ../server/dart_frog_api
+  shared_models:
+    path: ../packages/shared_models
+  mongo_dart: ^0.10.3
+  http: ^1.2.2
+  uuid: ^4.5.1
+  args: ^2.5.0
+
+dev_dependencies:
+  test: ^1.25.8
+  lints: ^4.0.0

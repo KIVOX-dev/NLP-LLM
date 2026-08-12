@@ -128,3 +128,86 @@ String buildTranslationUserPrompt({
   }
   return buffer.toString();
 }
+
+/// System prompt for scripts/generate_dataset.dart. Distinct from
+/// [kTranslationSystemPrompt] because this task is generative (invent a new,
+/// correct sentence) rather than analytical (translate a given one) — but
+/// the output schema below is intentionally IDENTICAL to
+/// [kTranslationSystemPrompt]'s, field-for-field. If this dataset is ever
+/// used for fine-tuning, training examples whose assistant turns are
+/// missing fields the real API always returns would teach the model the
+/// wrong response shape — so whatever the live server promises to return,
+/// the generated training data must actually contain.
+///
+/// Also carries the same grounding discipline as the live prompt: no
+/// fabricated grammar, mark uncertainty, and every example is explicitly
+/// synthetic/unverified until a human reviews it (spec §25: "Do not mark
+/// synthetic examples as authoritative").
+const String kDatasetGenerationSystemPrompt = '''
+You are generating training/evaluation examples for a Sanskrit-to-English-and-Tamil
+translation dataset. For each request you will invent ONE new, grammatically valid
+Sanskrit sentence fitting the given category, then fully analyze it yourself exactly
+as the production translation engine would.
+
+Rules:
+- The Sanskrit sentence must be your own, correct, natural composition for the
+  requested category — not copied verbatim from a famous verse unless the category
+  is explicitly about classical/philosophical register, in which case an
+  original sentence in that style (not a quotation) is still preferred.
+- Do not invent grammatical analysis you are not confident in — if genuinely
+  unsure about a form, prefer a simpler sentence you CAN analyze correctly
+  over a complex one you cannot. Mark uncertain fields' confidence as
+  "low"/"medium" rather than guessing and reporting "high".
+- Tamil must be translated from the Sanskrit meaning directly, not machine-translated
+  from the English.
+- Vary vocabulary and sentence structure — do not reuse the same template with only
+  nouns swapped; the dataset must not be repetitive spam.
+- Return a single JSON object only, no markdown fences, no commentary, matching
+  this shape EXACTLY — it is the same shape the production API must return:
+
+{
+  "sanskrit": "<the Sanskrit sentence you invented>",
+  "iast": "<IAST transliteration>",
+  "english": "<fluent English translation>",
+  "tamil": "<fluent Tamil translation>",
+  "literal_english": "<word-for-word literal English>",
+  "literal_tamil": "<word-for-word literal Tamil>",
+  "words": [
+    { "surface": "...", "iast": "...", "english_meaning": "...", "tamil_meaning": "...",
+      "morphology": {
+        "part_of_speech": "noun|pronoun|adjective|verb|participle|indeclinable|compound|proper_noun",
+        "lemma": "...", "root": "...", "gender": "...", "number": "...", "case": "...",
+        "declension": "...", "syntactic_role": "...", "person": "...", "tense": "...",
+        "mood": "...", "voice": "...", "lakara": "...", "verb_class": "...",
+        "is_causative": false, "is_desiderative": false, "is_intensive": false,
+        "confidence": "high|medium|low"
+      }
+    }
+  ],
+  "grammar": { "subject": "...", "object": "...", "verb": "...", "tense": "...",
+    "person": "...", "number": "...", "voice": "...", "mood": "...", "notes": ["..."] },
+  "sandhi": [ { "surface": "...", "components": ["...", "..."], "type": "vowel|consonant|visarga|anusvara", "rule": "...", "is_ambiguous": false } ],
+  "compounds": [ { "surface": "...", "members": ["...", "..."], "type": "tatpurusha|karmadharaya|bahuvrihi|dvandva|avyayibhava|unknown", "gloss": "..." } ],
+  "pronunciation": { "original": "...", "iast": "...", "syllables": ["..."], "guide": "..." },
+  "confidence": { "level": "high|medium|low", "notes": ["..."] },
+  "uncertainties": ["..."],
+  "sanskrit_tradition": "classical|vedic|unknown",
+  "difficulty": "easy|medium|hard"
+}
+
+Omit "sandhi"/"compounds" entries (empty arrays) if the sentence genuinely has none —
+never invent a sandhi split or compound that isn't really there. Any field you cannot
+determine with reasonable confidence must be null, an empty array, or omitted — never
+fabricated.
+''';
+
+String buildDatasetGenerationUserPrompt({
+  required String category,
+  required String domain,
+  required String guidance,
+}) {
+  return 'Category: $category\n'
+      'Domain: $domain\n'
+      'Guidance: $guidance\n\n'
+      'Generate one example now.';
+}

@@ -14,6 +14,28 @@ class MongoClientService {
 
   static Future<MongoClientService> connect() async {
     if (_instance != null) return _instance!;
+    return _openNewConnection();
+  }
+
+  /// Atlas free-tier (M0) clusters reset idle/long-lived connections after a
+  /// batch of operations, and mongo_dart doesn't auto-reconnect once that
+  /// happens — every further call fails with "No master connection" even
+  /// though the cluster itself is fine. Long-running batch scripts (the
+  /// dataset importers) call this to discard the dead connection and open a
+  /// fresh one rather than getting permanently stuck. The live API server
+  /// doesn't need this: each request is short, so a mid-request drop is rare
+  /// and simply surfaces as one failed request rather than a stuck process.
+  static Future<MongoClientService> reconnect() async {
+    try {
+      await _instance?._db.close();
+    } catch (_) {
+      // The connection is already dead; nothing to clean up.
+    }
+    _instance = null;
+    return _openNewConnection();
+  }
+
+  static Future<MongoClientService> _openNewConnection() async {
     final uri = _resolveDatabaseInUri(EnvConfig.instance.mongoUri, EnvConfig.instance.mongoDatabase);
     final db = await Db.create(uri);
     await db.open();
@@ -57,4 +79,11 @@ abstract final class Collections {
   static const trainingExamples = 'training_examples';
   static const modelVersions = 'model_versions';
   static const apiUsage = 'api_usage';
+
+  // Monolingual reference corpora (not in the original spec §4 list — added
+  // to hold bounded samples pulled from Kaggle). These are NOT parallel/
+  // aligned with sanskrit_sentences; they exist for future vocabulary/
+  // embedding work in each language individually, not as translation pairs.
+  static const englishVocabulary = 'english_vocabulary';
+  static const tamilCorpusSentences = 'tamil_corpus_sentences';
 }
