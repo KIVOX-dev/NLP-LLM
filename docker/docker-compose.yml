@@ -1,0 +1,32 @@
+# Local development stack. MongoDB is included here for convenience; point
+# MONGODB_URI at Atlas instead and drop the `mongo` service for anything
+# beyond local dev.
+#
+# Usage from repo root:
+#   cp .env.example server/dart_frog_api/.env   # then fill in real values
+#   docker compose -f docker/docker-compose.yml up --build
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../server/dart_frog_api/.env
+    environment:
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017}
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-sanskrit_translator}
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

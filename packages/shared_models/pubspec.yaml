@@ -1,0 +1,17 @@
+name: shared_models
+description: >
+  DTOs shared between the Dart Frog backend and the Flutter client for the
+  SanskritAI Translator platform. Pure Dart, no Flutter dependency, so it can
+  be imported from the server as well as the app.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  meta: ^1.11.0
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^4.0.0
