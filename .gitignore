@@ -44,3 +44,7 @@ Thumbs.db
 # the directory structure versioned, but not large generated payloads unless
 # you've deliberately decided to check in a dataset snapshot.
 dataset/**/*.jsonl
+
+# Raw Kaggle pulls — re-fetchable, and train.txt (600MB+) exceeds GitHub's
+# 100MB per-file limit.
+_kaggle_pull/sanskrit/train.txt
