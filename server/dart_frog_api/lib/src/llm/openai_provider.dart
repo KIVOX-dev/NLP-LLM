@@ -128,6 +128,13 @@ class OpenAIProvider implements LLMProvider {
     );
   }
 
+  @override
+  Future<LlmResult> classifyWord(String word, {Map<String, dynamic>? dictionaryHit}) => _completeJson(
+        model: _env.openAiModel,
+        systemPrompt: kWordClassificationSystemPrompt,
+        userPrompt: buildWordClassificationUserPrompt(word: word, dictionaryHit: dictionaryHit),
+      );
+
   Future<LlmResult> _completeJson({
     required String model,
     required String systemPrompt,

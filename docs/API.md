@@ -129,6 +129,39 @@ URL-encode `:word` (lemma or IAST). 404 if not found.
 
 ---
 
+## POST /word-classify
+
+No auth required. Classifies a single Sanskrit word into one of the four
+categories from the classic "Name, Place, Animal, Thing" word game, and
+returns one grounded example sentence.
+
+**Request**
+```json
+{ "word": "गजः" }
+```
+`word` must be a single word (no whitespace), max length 100 characters.
+
+**200**
+```json
+{
+  "word": "गजः",
+  "iast": "gajaḥ",
+  "category": "animal",
+  "english_meaning": "elephant",
+  "example_sanskrit": "गजः वनं गच्छति।",
+  "example_english": "The elephant goes to the forest.",
+  "confidence": "high"
+}
+```
+`category` is one of `name`, `place`, `animal`, `thing`.
+
+**Errors**: `400 VALIDATION_FAILED` (empty word, multi-word input, too long),
+`502 TRANSLATION_FAILED` (LLM output failed schema validation),
+`503 UPSTREAM_UNAVAILABLE` (LLM provider unreachable or
+`OPENAI_API_KEY` unset).
+
+---
+
 ## GET /conversations — auth required
 
 `{ "conversations": [Conversation, ...] }`, newest-updated first.

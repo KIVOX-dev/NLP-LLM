@@ -74,4 +74,11 @@ abstract class LLMProvider {
   /// for future fine-tuning data (spec §18, §27). Output must be marked
   /// synthetic/unverified by the caller — this method only generates text.
   Future<LlmResult> generateTrainingExample(LlmTranslationContext context);
+
+  /// Classifies a single Sanskrit word into name/place/animal/thing and
+  /// produces one grounded example sentence — used by
+  /// `POST /api/v1/word-classify`. `dictionaryHit` is an optional grounding
+  /// evidence map (see `VocabularyRepository`), serialized independently of
+  /// the repository layer just like `LlmTranslationContext.dictionaryHits`.
+  Future<LlmResult> classifyWord(String word, {Map<String, dynamic>? dictionaryHit});
 }

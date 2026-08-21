@@ -8,3 +8,4 @@ export 'src/grammar_analysis.dart';
 export 'src/translation_request.dart';
 export 'src/translation_response.dart';
 export 'src/word_analysis.dart';
+export 'src/word_classification.dart';

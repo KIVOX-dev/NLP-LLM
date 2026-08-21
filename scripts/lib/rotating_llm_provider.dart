@@ -42,6 +42,10 @@ class RotatingLlmProvider implements LLMProvider {
   Future<LlmResult> generateTrainingExample(LlmTranslationContext context) =>
       _withRotation((p) => p.generateTrainingExample(context));
 
+  @override
+  Future<LlmResult> classifyWord(String word, {Map<String, dynamic>? dictionaryHit}) =>
+      _withRotation((p) => p.classifyWord(word, dictionaryHit: dictionaryHit));
+
   Future<T> _withRotation<T>(Future<T> Function(LLMProvider provider) call) async {
     var attemptsThisPass = 0;
 

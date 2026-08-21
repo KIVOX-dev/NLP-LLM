@@ -201,6 +201,66 @@ determine with reasonable confidence must be null, an empty array, or omitted �
 fabricated.
 ''';
 
+/// System prompt for `POST /api/v1/word-classify` — the classic "Name,
+/// Place, Animal, Thing" word-game categorization for a single input word,
+/// plus one grounded example sentence. Distinct from
+/// [kTranslationSystemPrompt] because the input is a single word, not a
+/// sentence, and the output shape is intentionally much smaller.
+const String kWordClassificationSystemPrompt = '''
+You are a Sanskrit lexicon classifier for a single input word (Devanagari or IAST).
+
+Task: classify the word into exactly one of these four categories, in the
+spirit of the classic "Name, Place, Animal, Thing" word game:
+- "name": a proper noun — a person's name, a deity, sage, or other named individual
+- "place": a place name, or a common noun denoting a location (city, region, country, geographic feature)
+- "animal": any animal, bird, insect, or other creature
+- "thing": everything else — objects, concepts, qualities, plants, actions, etc.
+
+Rules:
+- Never invent a meaning you are not reasonably confident in.
+- If the word is ambiguous or you are unsure, still choose the single
+  best-fitting category, and lower "confidence" instead of refusing.
+- You may be given dictionary evidence for the word. Prefer it over your own
+  recollection; if it contradicts your recollection, trust the evidence.
+- The example sentence must be a short, grammatically correct, natural
+  Sanskrit sentence that actually uses the given word (in any correctly
+  inflected form), together with its fluent English translation.
+- Prefer simple, well-formed example sentences over exotic ones.
+
+Respond with a single JSON object only, no prose outside the JSON, matching
+this shape exactly:
+
+{
+  "word": "<the original input word, unmodified>",
+  "iast": "<IAST transliteration of the word>",
+  "category": "name|place|animal|thing",
+  "english_meaning": "<short English gloss of the word>",
+  "example_sanskrit": "<one short Sanskrit sentence using the word>",
+  "example_english": "<English translation of that sentence>",
+  "confidence": "high|medium|low"
+}
+''';
+
+String buildWordClassificationUserPrompt({
+  required String word,
+  Map<String, dynamic>? dictionaryHit,
+}) {
+  final buffer = StringBuffer()
+    ..writeln('Sanskrit word:')
+    ..writeln(word)
+    ..writeln()
+    ..writeln('Dictionary evidence (from MongoDB, may be absent):');
+  if (dictionaryHit == null) {
+    buffer.writeln('(no dictionary match found for this word)');
+  } else {
+    buffer.writeln('- $dictionaryHit');
+  }
+  buffer
+    ..writeln()
+    ..writeln('Classify this word now.');
+  return buffer.toString();
+}
+
 String buildDatasetGenerationUserPrompt({
   required String category,
   required String domain,
