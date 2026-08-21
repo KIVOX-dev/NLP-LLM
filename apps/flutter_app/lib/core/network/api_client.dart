@@ -63,11 +63,6 @@ class ApiClient {
 
   Future<Map<String, dynamic>> getDictionaryEntry(String word) => _get('/dictionary/${Uri.encodeComponent(word)}');
 
-  Future<WordClassificationResponse> classifyWord(String word) async {
-    final json = await _post('/word-classify', WordClassificationRequest(word: word).toJson());
-    return WordClassificationResponse.fromJson(json);
-  }
-
   Future<Map<String, dynamic>> analyzeSandhi(String text) => _post('/sandhi', {'text': text});
 
   Future<Map<String, dynamic>> getPronunciation(String text) => _post('/pronunciation', {'text': text});

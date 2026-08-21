@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_models/shared_models.dart';
 
 import '../../../../core/config/app_config.dart';
@@ -130,11 +129,6 @@ class _TopBar extends StatelessWidget {
             child: Text(AppConfig.appName, style: Theme.of(context).textTheme.titleMedium),
           ),
           IconButton(
-            icon: const Icon(Icons.quiz_outlined),
-            tooltip: 'Name, Place, Animal, Thing',
-            onPressed: () => context.push('/word-classify'),
-          ),
-          IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: 'Settings',
             onPressed: () {},
@@ -182,7 +176,7 @@ class _EmptyState extends StatelessWidget {
 
   static const _quickActions = <(IconData, String, String)>[
     (Icons.translate_rounded, 'Translate Sanskrit', 'रामः वनं गच्छति।'),
-    (Icons.menu_book_outlined, 'Dictionary', 'धर्म'),
+    (Icons.auto_awesome_outlined, 'Word to Sentence', 'धर्म'),
     (Icons.account_tree_outlined, 'Grammar Analysis', 'बालकः पुस्तकं पठति।'),
     (Icons.merge_type_rounded, 'Sandhi Analysis', 'रामोऽस्ति'),
     (Icons.record_voice_over_outlined, 'Pronunciation', 'गच्छति'),

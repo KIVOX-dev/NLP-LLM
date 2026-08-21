@@ -62,6 +62,16 @@ auth issuance isn't built yet; this will tighten once login exists).
 Only `text` is required; every other field defaults as shown. `text` max
 length is `MAX_INPUT_CHARACTERS` (default 2000).
 
+**Sentence formation**: if `text` is a single bare word (e.g. `गजः`) rather
+than a sentence, the orchestrator first composes one short grounded Sanskrit
+sentence containing that word, then runs the normal pipeline below on the
+generated sentence — so a one-word query still returns a full translation,
+word analysis, grammar, and pronunciation instead of a bare literal gloss.
+`source.original` reflects the generated sentence, not the original single
+word. This applies to `/chat` and `/analyze` too, since both wrap this same
+orchestrator. See `TranslationOrchestrator._isSingleWord` /
+`_formSentenceFor`.
+
 **200**
 ```json
 {
@@ -126,39 +136,6 @@ Request: `{ "query": "dharma", "limit": 20 }` → `{ "results": [VocabularyEntry
 ## GET /dictionary/:word
 
 URL-encode `:word` (lemma or IAST). 404 if not found.
-
----
-
-## POST /word-classify
-
-No auth required. Classifies a single Sanskrit word into one of the four
-categories from the classic "Name, Place, Animal, Thing" word game, and
-returns one grounded example sentence.
-
-**Request**
-```json
-{ "word": "गजः" }
-```
-`word` must be a single word (no whitespace), max length 100 characters.
-
-**200**
-```json
-{
-  "word": "गजः",
-  "iast": "gajaḥ",
-  "category": "animal",
-  "english_meaning": "elephant",
-  "example_sanskrit": "गजः वनं गच्छति।",
-  "example_english": "The elephant goes to the forest.",
-  "confidence": "high"
-}
-```
-`category` is one of `name`, `place`, `animal`, `thing`.
-
-**Errors**: `400 VALIDATION_FAILED` (empty word, multi-word input, too long),
-`502 TRANSLATION_FAILED` (LLM output failed schema validation),
-`503 UPSTREAM_UNAVAILABLE` (LLM provider unreachable or
-`OPENAI_API_KEY` unset).
 
 ---
 

@@ -16,7 +16,7 @@ void main() {
     expect(find.text(AppConfig.appName), findsWidgets);
     expect(find.text(AppConfig.appTagline), findsOneWidget);
     expect(find.text('Translate Sanskrit'), findsOneWidget);
-    expect(find.text('Dictionary'), findsOneWidget);
+    expect(find.text('Word to Sentence'), findsOneWidget);
     expect(find.text('Sandhi Analysis'), findsOneWidget);
   });
 }

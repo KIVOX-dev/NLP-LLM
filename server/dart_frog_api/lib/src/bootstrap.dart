@@ -14,7 +14,6 @@ import 'repositories/mongo_conversation_repository.dart';
 import 'repositories/mongo_vocabulary_repository.dart';
 import 'repositories/vocabulary_repository.dart';
 import 'translation/translation_orchestrator.dart';
-import 'translation/word_classification_service.dart';
 import 'vector/vector_search_service.dart';
 
 /// Wires every concrete implementation behind its interface, once per
@@ -29,7 +28,6 @@ class AppServices {
     required this.feedbackRepository,
     required this.llmProvider,
     required this.orchestrator,
-    required this.wordClassificationService,
     required this.jwtService,
     required this.passwordHasher,
   });
@@ -39,7 +37,6 @@ class AppServices {
   final FeedbackRepository feedbackRepository;
   final LLMProvider llmProvider;
   final TranslationOrchestrator orchestrator;
-  final WordClassificationService wordClassificationService;
   final JwtService jwtService;
   final PasswordHasher passwordHasher;
 
@@ -81,10 +78,6 @@ class AppServices {
       feedbackRepository: feedbackRepository,
       llmProvider: llmProvider,
       orchestrator: orchestrator,
-      wordClassificationService: WordClassificationService(
-        vocabularyRepository: vocabularyRepository,
-        llmProvider: llmProvider,
-      ),
       jwtService: JwtService(EnvConfig.instance),
       passwordHasher: const PasswordHasher(),
     );

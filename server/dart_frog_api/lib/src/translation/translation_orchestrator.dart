@@ -65,7 +65,18 @@ class TranslationOrchestrator {
     }
 
     // 2. Unicode normalization
-    final normalizedText = _normalize(request.text);
+    var normalizedText = _normalize(request.text);
+
+    // 2b. Sentence formation: a bare single word (e.g. someone looking up
+    // "गजः") has nothing for the rest of the pipeline to analyze as a
+    // sentence, so compose one short grounded sentence containing it first,
+    // then fall through to the normal pipeline below on that sentence. This
+    // is what makes a single-word query still come back as a full
+    // translation/analysis through /translate, /chat, and /analyze alike,
+    // with no separate word-lookup endpoint needed.
+    if (_isSingleWord(normalizedText)) {
+      normalizedText = await _formSentenceFor(normalizedText.replaceAll(_trailingSentencePunctuation, ''));
+    }
 
     // 3. Language identification is trusted from the (validated) request —
     // only Sanskrit source is supported today.
@@ -213,6 +224,35 @@ class TranslationOrchestrator {
   }
 
   String _normalize(String text) => text.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  static final _trailingSentencePunctuation = RegExp(r'[।॥.!?]+$');
+
+  /// True for input that's just one word (optionally with trailing sentence
+  /// punctuation, e.g. "गजः।") rather than an actual sentence.
+  bool _isSingleWord(String text) {
+    final stripped = text.replaceAll(_trailingSentencePunctuation, '').trim();
+    return stripped.isNotEmpty && !stripped.contains(RegExp(r'\s'));
+  }
+
+  Future<String> _formSentenceFor(String word) async {
+    final dictEntry =
+        await _vocabularyRepository.findBySurfaceForm(word) ?? await _vocabularyRepository.findByLemma(word);
+    final dictionaryHit = dictEntry == null
+        ? null
+        : {
+            'lemma': dictEntry.lemma,
+            'iast': dictEntry.iast,
+            'pos': dictEntry.pos,
+            'english_meanings': dictEntry.englishMeanings,
+          };
+
+    final result = await _llmProvider.generateExampleSentence(word, dictionaryHit: dictionaryHit);
+    final sentence = result.json['sentence'] as String?;
+    if (sentence == null || sentence.trim().isEmpty) {
+      throw AppException.translationFailed('Could not form a sentence for this word.');
+    }
+    return sentence.trim();
+  }
 
   /// Grounded (dictionary/morphology-backed) results win; the LLM's
   /// word_analysis only fills in fields our deterministic pipeline left null

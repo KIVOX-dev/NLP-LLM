@@ -201,47 +201,32 @@ determine with reasonable confidence must be null, an empty array, or omitted �
 fabricated.
 ''';
 
-/// System prompt for `POST /api/v1/word-classify` — the classic "Name,
-/// Place, Animal, Thing" word-game categorization for a single input word,
-/// plus one grounded example sentence. Distinct from
-/// [kTranslationSystemPrompt] because the input is a single word, not a
-/// sentence, and the output shape is intentionally much smaller.
-const String kWordClassificationSystemPrompt = '''
-You are a Sanskrit lexicon classifier for a single input word (Devanagari or IAST).
-
-Task: classify the word into exactly one of these four categories, in the
-spirit of the classic "Name, Place, Animal, Thing" word game:
-- "name": a proper noun — a person's name, a deity, sage, or other named individual
-- "place": a place name, or a common noun denoting a location (city, region, country, geographic feature)
-- "animal": any animal, bird, insect, or other creature
-- "thing": everything else — objects, concepts, qualities, plants, actions, etc.
+/// System prompt for sentence formation: when a user gives the translation
+/// pipeline a single bare word instead of a sentence, [TranslationOrchestrator]
+/// uses this to invent one short natural sentence containing that word
+/// *before* running the normal translate pipeline on it — so a single-word
+/// query still comes back as a full, grounded translation/analysis through
+/// the same `/translate`, `/chat`, and `/analyze` endpoints (spec: no
+/// separate word-lookup surface).
+const String kSentenceFormationSystemPrompt = '''
+You are helping a Sanskrit learner who typed a single word instead of a
+sentence. Compose ONE short, grammatically correct, natural Sanskrit sentence
+that actually uses the given word (in any correctly inflected form).
 
 Rules:
 - Never invent a meaning you are not reasonably confident in.
-- If the word is ambiguous or you are unsure, still choose the single
-  best-fitting category, and lower "confidence" instead of refusing.
 - You may be given dictionary evidence for the word. Prefer it over your own
   recollection; if it contradicts your recollection, trust the evidence.
-- The example sentence must be a short, grammatically correct, natural
-  Sanskrit sentence that actually uses the given word (in any correctly
-  inflected form), together with its fluent English translation.
-- Prefer simple, well-formed example sentences over exotic ones.
+- Prefer a simple, well-formed sentence over an exotic one.
+- Return the Sanskrit sentence only, nothing else about it.
 
 Respond with a single JSON object only, no prose outside the JSON, matching
 this shape exactly:
 
-{
-  "word": "<the original input word, unmodified>",
-  "iast": "<IAST transliteration of the word>",
-  "category": "name|place|animal|thing",
-  "english_meaning": "<short English gloss of the word>",
-  "example_sanskrit": "<one short Sanskrit sentence using the word>",
-  "example_english": "<English translation of that sentence>",
-  "confidence": "high|medium|low"
-}
+{ "sentence": "<one short Sanskrit sentence using the word>" }
 ''';
 
-String buildWordClassificationUserPrompt({
+String buildSentenceFormationUserPrompt({
   required String word,
   Map<String, dynamic>? dictionaryHit,
 }) {
@@ -257,7 +242,7 @@ String buildWordClassificationUserPrompt({
   }
   buffer
     ..writeln()
-    ..writeln('Classify this word now.');
+    ..writeln('Compose the sentence now.');
   return buffer.toString();
 }
 
