@@ -53,13 +53,22 @@ class AppServices {
 
     final llmProvider = OpenAIProvider();
 
+    // Real retrieval requires both an embedding model and a built Atlas
+    // index (see scripts/create_embeddings.dart + create_vector_index.dart)
+    // — falls back to the no-op rather than erroring so the server still
+    // starts in an environment where those haven't been set up yet.
+    final env = EnvConfig.instance;
+    final vectorSearchService = (env.embeddingModel.isNotEmpty && env.vectorIndexName.isNotEmpty)
+        ? MongoVectorSearchService(mongo)
+        : const NoOpVectorSearchService();
+
     final orchestrator = TranslationOrchestrator(
       vocabularyRepository: vocabularyRepository,
       morphologyAnalyzer: DictionaryBackedMorphologyAnalyzer(vocabularyRepository),
       sandhiAnalyzer: RuleBasedSandhiAnalyzer(),
       samasaAnalyzer: const UnknownSamasaAnalyzer(),
       pronunciationService: PronunciationService(),
-      vectorSearchService: const NoOpVectorSearchService(),
+      vectorSearchService: vectorSearchService,
       llmProvider: llmProvider,
     );
 

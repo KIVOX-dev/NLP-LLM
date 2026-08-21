@@ -17,22 +17,25 @@ class ConfidenceBadge extends StatelessWidget {
     };
 
     final badge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: 6,
+            height: 6,
             margin: const EdgeInsets.only(right: 6),
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w600, letterSpacing: 0.4),
+          ),
         ],
       ),
     );

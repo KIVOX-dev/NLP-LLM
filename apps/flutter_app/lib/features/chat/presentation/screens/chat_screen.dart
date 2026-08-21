@@ -191,22 +191,31 @@ class _EmptyState extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 720),
           child: Column(
             children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                ),
+                child: Text('SANSKRIT NLP', style: Theme.of(context).textTheme.labelSmall),
+              ),
+              const SizedBox(height: 20),
               Text(AppConfig.appName, style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
                 AppConfig.appTagline,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 10,
+                runSpacing: 10,
                 alignment: WrapAlignment.center,
                 children: [
                   for (final action in _quickActions)
                     ActionChip(
-                      avatar: Icon(action.$1, size: 18),
+                      avatar: Icon(action.$1, size: 16),
                       label: Text(action.$2),
                       onPressed: () => onQuickAction(action.$3),
                     ),

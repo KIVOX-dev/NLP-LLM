@@ -31,8 +31,13 @@ Future<void> main(List<String> arguments) async {
     outFile: '$outDir/sanskrit.jsonl',
     project: (doc) => {
       'sanskrit': doc['sanskrit'],
+      'iast': doc['iast'],
       'english': doc['english'],
       'tamil': doc['tamil'],
+      'sandhi': doc['sandhi'],
+      'translation_confidence': doc['translation_confidence'],
+      'translation_note': doc['translation_note'],
+      'translation_source': doc['translation_source'],
       'source_type': doc['source_type'],
       'source_name': doc['source_name'],
       'verified': doc['verified'],

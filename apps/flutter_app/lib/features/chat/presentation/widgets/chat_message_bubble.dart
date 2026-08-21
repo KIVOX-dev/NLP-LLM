@@ -25,11 +25,11 @@ class ChatMessageBubble extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             message.text,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 16),
           ),
         ),
       );

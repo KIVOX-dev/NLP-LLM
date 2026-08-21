@@ -121,6 +121,11 @@ class EnvConfig {
   String get openAiEconomyModel => getOrDefault('OPENAI_ECONOMY_MODEL', openAiModel);
   String get openAiBaseUrl => getOrDefault('OPENAI_BASE_URL', 'https://api.openai.com/v1');
 
+  /// Empty when not configured — [MongoVectorSearchService] is only wired up
+  /// (see bootstrap.dart) once both this and [vectorIndexName] are real.
+  String get embeddingModel => getOrDefault('EMBEDDING_MODEL', '');
+  String get vectorIndexName => getOrDefault('VECTOR_INDEX_NAME', '');
+
   int get maxInputCharacters => getIntOrDefault('MAX_INPUT_CHARACTERS', 2000);
   int get llmRequestTimeoutSeconds => getIntOrDefault('LLM_REQUEST_TIMEOUT_SECONDS', 30);
   int get llmMaxOutputTokens => getIntOrDefault('LLM_MAX_OUTPUT_TOKENS', 2000);

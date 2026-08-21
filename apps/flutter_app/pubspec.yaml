@@ -20,6 +20,7 @@ dependencies:
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
   cupertino_icons: ^1.0.8
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:

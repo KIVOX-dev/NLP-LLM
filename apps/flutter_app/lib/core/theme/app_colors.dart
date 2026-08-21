@@ -1,28 +1,43 @@
 import 'package:flutter/material.dart';
 
-/// Brand-neutral palette for a "serious research/translation tool" look
-/// (spec §48) — muted indigo accent, warm neutrals, no gradients.
+/// Vercel/Geist-inspired token system: primitive → semantic layering.
+/// Monochrome-first (black/white carries all primary UI weight); color is
+/// reserved for semantic status only (confidence, success/warning/danger).
 abstract final class AppColors {
-  static const Color accent = Color(0xFF4F5FE0);
-  static const Color accentMuted = Color(0xFFE3E5FB);
+  // ---- Primitives (raw neutral ramp) ----
+  static const Color _black = Color(0xFF000000);
+  static const Color _white = Color(0xFFFFFFFF);
+  static const Color _gray50 = Color(0xFFFAFAFA);
+  static const Color _gray200 = Color(0xFFEAEAEA);
+  static const Color _gray500 = Color(0xFF8F8F8F);
+  static const Color _gray600 = Color(0xFF666666);
+  static const Color _gray800 = Color(0xFF333333);
+  static const Color _gray900 = Color(0xFF111111);
+  static const Color _gray950 = Color(0xFF0A0A0A);
 
-  static const Color lightBackground = Color(0xFFFAFAF9);
-  static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceAlt = Color(0xFFF1F1EF);
-  static const Color lightBorder = Color(0xFFE4E4E1);
-  static const Color lightTextPrimary = Color(0xFF1C1C1A);
-  static const Color lightTextSecondary = Color(0xFF6B6B66);
+  // ---- Semantic: accent (monochrome — flips with theme) ----
+  static const Color accent = _black;
+  static const Color accentDark = _white;
 
-  static const Color darkBackground = Color(0xFF17171A);
-  static const Color darkSurface = Color(0xFF1F1F23);
-  static const Color darkSurfaceAlt = Color(0xFF27272C);
-  static const Color darkBorder = Color(0xFF34343A);
-  static const Color darkTextPrimary = Color(0xFFF2F2F0);
-  static const Color darkTextSecondary = Color(0xFFA6A6A2);
+  // ---- Semantic: surfaces ----
+  static const Color lightBackground = _white;
+  static const Color lightSurface = _white;
+  static const Color lightSurfaceAlt = _gray50;
+  static const Color lightBorder = _gray200;
+  static const Color lightTextPrimary = _gray950;
+  static const Color lightTextSecondary = _gray600;
 
-  static const Color success = Color(0xFF3E9B5C);
-  static const Color warning = Color(0xFFB8802A);
-  static const Color danger = Color(0xFFC24545);
+  static const Color darkBackground = _black;
+  static const Color darkSurface = _gray950;
+  static const Color darkSurfaceAlt = _gray900;
+  static const Color darkBorder = _gray800;
+  static const Color darkTextPrimary = _gray50;
+  static const Color darkTextSecondary = _gray500;
+
+  // ---- Semantic: status ----
+  static const Color success = Color(0xFF12805C);
+  static const Color warning = Color(0xFFB45309);
+  static const Color danger = Color(0xFFE5484D);
 
   static const Color confidenceHigh = success;
   static const Color confidenceMedium = warning;
